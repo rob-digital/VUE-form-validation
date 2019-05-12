@@ -46,7 +46,7 @@ new Vue({
   methods: {
     submitForm () {
        
-        
+        this.$v.form.$touch()
             /*  if (this.formIsValid) {
                 console.log('📝 Form Submitted', this.form)
               }else {
