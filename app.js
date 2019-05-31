@@ -1,5 +1,8 @@
 Vue.use(vuelidate.default)
 
+const pizzaOrBurger = value => value === 'pizza' || value === 'burger' || !validators.helpers.req(value)
+const oldEnoughAndAlive = validators.between(12, 120)
+
 new Vue({
   el: '#app',
 
@@ -7,57 +10,65 @@ new Vue({
     return {
       form: {
         name: null,
-        age: null
+        age: null,
+        email: null,
+        newsletter: null,
+        githubUsername: null,
+        food: null
       }
     }
   },
 
-    
   validations: {
     form: {
-        name: {
-            required: validators.required
-        },
-        age: {
-            integer: validators.integer,
-            required: validators.required,
-            /*min: validators.minValue(12),
-            max: validators.maxValue(120)*/
-            between: validators.between(12, 120)
+      name: {
+        required: validators.required
+      },
+
+      age: {
+        required: validators.required, // $v.form.age.required
+        integer: validators.integer, // $v.form.age.integer
+        oldEnoughAndAlive // $v.form.age.oldEnoughAndAlive
+      },
+
+      email: {
+        email: validators.email,
+        required: validators.requiredIf(function () {
+          return !!this.form.newsletter
+        })
+      },
+
+      githubUsername: {
+        exists (value) {
+          if (!validators.helpers.req(value)) {
+            return true
+          }
+          return axios.get(`//api.github.com/users/${value}`)
         }
-        
-    }  
-      
-  },
-/* computed: {
-   nameIsValid () {
-       return !!this.form.name
-   },
-     
-   ageIsValid() {
-       return typeof this.form.age === 'number' && this.form.age > 6 && this.form.age < 121
-   },
-     
-    formIsValid() {
-        return this.nameIsValid && this.ageIsValid
+      },
+
+      food: {
+        pizzaOrBurger
+      }
     }
- },*/
-  
+  },
+
   methods: {
+    shouldAppendValidClass (field) { // ex: field = $v.form.email
+      return !field.$invalid && field.$model && field.$dirty
+    },
+
+    shouldAppendErrorClass (field) { // ex: field = $v.form.email
+      return field.$error
+    },
+
     submitForm () {
-       
-        this.$v.form.$touch()
-            /*  if (this.formIsValid) {
-                console.log('📝 Form Submitted', this.form)
-              }else {
-                  console.log('Invalid form')
-              }*/
-        if (!this.$v.form.$invalid) {
-            console.log('Form submitted', this.form)
-        } else {
-            console.log('Invalid Form')
-        }
-      
+      this.$v.form.$touch()
+      if (!this.$v.form.$invalid) {
+        console.log('📝 Form Submitted', this.form)
+      } else {
+        console.log('❌ Invalid form')
+      }
     }
   }
 })
